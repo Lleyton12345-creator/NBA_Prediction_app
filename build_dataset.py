@@ -13,7 +13,7 @@ con.execute(f"ATTACH '{SOURCE}' AS nba (READ_ONLY)")
 
 seasons = con.execute("""
     SELECT * FROM nba.player_season_stats
-    WHERE season BETWEEN 2011 AND 2027 AND season_type = 'regular_season'
+    WHERE season BETWEEN 2004 AND 2027 AND season_type = 'regular_season'
 """).df()
 if seasons.empty:
     raise RuntimeError("No season records returned")
@@ -36,7 +36,7 @@ assert players.player_id.is_unique
 
 team_games = con.execute("""
     SELECT * FROM nba.team_game_logs
-    WHERE season BETWEEN 2011 AND 2027 AND season_type = 'regular_season'
+    WHERE season BETWEEN 2004 AND 2027 AND season_type = 'regular_season'
 """).df()
 if not {"team_id", "season", "win", "game_id"}.issubset(team_games.columns):
     raise ValueError("Unexpected team game schema: " + str(team_games.columns.tolist()))
@@ -50,7 +50,7 @@ team_records["win_pct"] = team_records.wins / team_records.games
 
 games = con.execute("""
     SELECT * FROM nba.player_game_logs
-    WHERE season BETWEEN 2011 AND 2027 AND season_type = 'regular_season'
+    WHERE season BETWEEN 2004 AND 2027 AND season_type = 'regular_season'
 """).df()
 games["player_id"] = games.player_id.astype(str)
 games = games[games.player_id.isin(qualifiers)].copy()
