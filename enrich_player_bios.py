@@ -1,59 +1,63 @@
-"""Enrich existing NBA biographies with an independently published player directory.
-Matches strictly on numeric NBA personId, never on player name.
+"""Enrich NBA player biographies from the public Hugging Face dataset viewer.
+Source: tamir25/nba_players_draft_analysis_tamir_sela (NBA PlayerIndex snapshot).
+Exact PERSON_ID match only. Do not infer active status from historical roster data.
 """
-import json, urllib.request
+import json, time, urllib.parse, urllib.request
 from pathlib import Path
 import pandas as pd
 
 DATA=Path(__file__).resolve().parent/"data"
-URL="https://raw.githubusercontent.com/nickth3man/basketball-data-index/main/csv/nba/Players.csv"
-def norm(x):
- if pd.isna(x):return None
- v=str(x).strip()
- return None if v.lower() in ("","nan","null","none","-") else v
+DATASET="tamir25/nba_players_draft_analysis_tamir_sela"
+BASE="https://datasets-server.huggingface.co"
+HEADERS={"User-Agent":"NBA-Prediction-App/1.0"}
+def get(path,params):
+ url=BASE+path+"?"+urllib.parse.urlencode(params)
+ req=urllib.request.Request(url,headers=HEADERS)
+ with urllib.request.urlopen(req,timeout=45) as response:return json.load(response)
+def clean(value):
+ if value is None or pd.isna(value):return None
+ value=str(value).strip()
+ return value if value and value.lower() not in ("none","null","nan","-","0.0") else None
 def main():
  previous=json.loads((DATA/"player_bios.json").read_text())
- profiles=previous.get("players",{})
+ players=previous.get("players",{})
  master=pd.read_csv(DATA/"players.csv.gz",dtype=str,low_memory=False)
  ids=set(master.player_id.dropna().astype(str))
- req=urllib.request.Request(URL,headers={"User-Agent":"NBA-Research-Dataset/1.0"})
- with urllib.request.urlopen(req,timeout=30) as response:
-  external=pd.read_csv(response,dtype=str,low_memory=False)
- print("External columns:",list(external.columns),flush=True)
- idcol=next((c for c in ("personId","PERSON_ID","player_id","playerId") if c in external.columns),None)
- if not idcol:raise RuntimeError("External data lacks numeric NBA player ID")
- matched=set()
- for row in external.to_dict("records"):
-  pid=norm(row.get(idcol))
-  if pid not in ids:continue
-  matched.add(pid)
-  p=profiles.setdefault(pid,{"nba_id":pid})
-  def fill(target,*cols):
-   if norm(p.get(target)):return
-   for c in cols:
-    v=norm(row.get(c))
-    if v:p[target]=v;return
-  fill("height","height","HEIGHT")
-  fill("weight","bodyWeight","weight","WEIGHT")
-  fill("draft_year","draftYear","draft_year")
-  fill("draft_round","draftRound","draft_round")
-  fill("draft_pick","draftNumber","draft_number")
-  if not norm(p.get("position")):
-   roles=[name for name,col in (("G","guard"),("F","forward"),("C","center")) if str(row.get(col,"")).lower() in ("true","1","yes","y")]
-   if roles:p["position"]="-".join(roles)
-  # Undrafted only when explicitly marked, not merely when draft fields are absent.
-  if str(row.get("draftYear","")).strip().lower() in ("undrafted","not drafted"):
-   p["draft_status"]="Undrafted"
- previous["players"]=profiles
- previous["external_source"]=URL
+ splits=get("/splits",{"dataset":DATASET})["splits"]
+ target=next((s for s in splits if s["split"]=="train"),splits[0])
+ config=target["config"];split=target["split"]
+ matched=set();count=0;total=target.get("num_rows") or 10000
+ for offset in range(0,total,100):
+  page=get("/rows",{"dataset":DATASET,"config":config,"split":split,"offset":offset,"length":100})
+  rows=[item["row"] for item in page.get("rows",[])]
+  if not rows:break
+  for row in rows:
+   pid=clean(row.get("PERSON_ID"))
+   if not pid or pid not in ids:continue
+   matched.add(pid);p=players.setdefault(pid,{"nba_id":pid})
+   for dst,src in [("position","POSITION"),("height","HEIGHT"),("weight","WEIGHT"),
+                   ("draft_year","DRAFT_YEAR"),("draft_round","DRAFT_ROUND"),("draft_pick","DRAFT_NUMBER")]:
+    v=clean(row.get(src))
+    if not clean(p.get(dst)) and v:
+     if dst.startswith("draft_") and v.endswith(".0"):v=v[:-2]
+     p[dst]=v
+   # Explicit undrafted markers only. Empty draft fields are NOT proof.
+   if str(row.get("DRAFT_YEAR","")).strip().lower() in ("undrafted","not drafted"):
+    p["draft_status"]="Undrafted"
+  count+=len(rows)
+  print("Read",count,"matched",len(matched),flush=True)
+  time.sleep(.12)
+ if not matched:raise RuntimeError("No NBA player IDs matched. Existing bios unchanged.")
+ previous["players"]=players
+ previous["external_source"]=DATASET
  (DATA/"player_bios.json").write_text(json.dumps(previous,separators=(",",":")))
  fields=["position","height","weight","draft_year","draft_round","draft_pick"]
- coverage={f:sum(bool(norm(profiles.get(pid,{}).get(f))) for pid in ids) for f in fields}
- report={"total_players":len(ids),"external_matched_ids":len(matched),"coverage":coverage,
- "missing_by_field":{f:sorted(pid for pid in ids if not norm(profiles.get(pid,{}).get(f))) for f in fields},
- "external_source":URL,
- "limitations":["No claim that every missing draft entry means undrafted","Headshot URLs require browser checks","Active status requires current official roster validation"]}
+ report={"total_players":len(ids),"external_matched_ids":len(matched),
+  "coverage":{f:sum(bool(clean(players.get(pid,{}).get(f))) for pid in ids) for f in fields},
+  "missing_by_field":{f:sorted(pid for pid in ids if not clean(players.get(pid,{}).get(f))) for f in fields},
+  "source":DATASET,"limitations":["Snapshot is historical; do not use for 2026 active status",
+  "Headshots are loaded from NBA CDN and not independently validated in this import",
+  "Undrafted requires explicit verification; empty draft fields are unknown"]}
  (DATA/"bio_coverage_report.json").write_text(json.dumps(report,indent=2))
- print(json.dumps({"total_players":len(ids),"external_matched_ids":len(matched),"coverage":coverage},indent=2),flush=True)
- if not matched:raise RuntimeError("No player IDs matched; do not save empty enrichment")
+ print(json.dumps({k:v for k,v in report.items() if k!="missing_by_field"},indent=2),flush=True)
 if __name__=="__main__":main()
