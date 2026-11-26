@@ -1,6 +1,6 @@
 # NBA Prediction App
 
-Historical NBA data builder for seasons 2010–11 through 2026–27.
+Historical NBA data builder for seasons 2003–04 through 2026–27.
 
 Run `pip install duckdb pandas pyarrow` and `python build_dataset.py` to create player, season, game and team datasets and a SQLite database. The 2026–27 season is incomplete.
 
