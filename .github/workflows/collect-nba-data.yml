@@ -1,0 +1,26 @@
+name: Collect NBA historical data
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'collect_nba_data.py'
+      - '.github/workflows/collect-nba-data.yml'
+permissions:
+  contents: write
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install 'duckdb>=1.1,<3'
+      - run: python collect_nba_data.py
+      - name: Commit collected data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || (git commit -m "Import NBA historical season datasets" && git push)
