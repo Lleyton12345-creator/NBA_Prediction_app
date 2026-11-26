@@ -1,0 +1,17 @@
+{
+  "seasons_checked": 24,
+  "master_players": {
+    "rows": 4483,
+    "columns": [
+      "player_id",
+      "name",
+      "first_season",
+      "last_season"
+    ],
+    "unique_player_ids": 4483,
+    "duplicate_player_ids": 0,
+    "missing_player_ids": 0
+  },
+  "issues_found": 0,
+  "issues_by_type": {}
+}
