@@ -1,0 +1,26 @@
+name: Audit NBA historical data
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'audit_nba_data.py'
+      - '.github/workflows/audit-nba-data.yml'
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas
+      - run: python audit_nba_data.py
+      - name: Commit audit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/audit_report.json data/audit_summary.json
+          git diff --cached --quiet || (git commit -m "Audit NBA historical records and duplicate keys" && git push)
