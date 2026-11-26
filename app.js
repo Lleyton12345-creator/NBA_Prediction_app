@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 const cache=new Map(),allSeasons=Array.from({length:24},(_,i)=>`${2003+i}-${String(2004+i).slice(-2)}`);
-let selected=null,seasonRows=[],names=new Map(),playerDetails=new Map(),activeTab="traditional",token=0;
+let selected=null,seasonRows=[],names=new Map(),playerDetails=new Map(),teamNames=new Map(),activeTab="traditional",token=0;
 function csv(text){let rows=[],row=[],field="",quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){field+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){row.push(field);field=""}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(field);if(row.some(x=>x!==""))rows.push(row);row=[];field=""}else field+=c}if(field||row.length){row.push(field);rows.push(row)}const header=rows.shift()||[];return rows.map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]??""])))}
 async function load(path){if(cache.has(path))return cache.get(path);const promise=(async()=>{const response=await fetch(path);if(!response.ok)throw Error(`Cannot load ${path}: HTTP ${response.status}`);let text;if(path.endsWith(".gz")){if(!("DecompressionStream" in window))throw Error("Your browser does not support gzip decompression. Try current Chrome, Edge or Safari.");const stream=response.body.pipeThrough(new DecompressionStream("gzip"));text=await new Response(stream).text()}else text=await response.text();return path.endsWith(".json")?JSON.parse(text):csv(text)})();cache.set(path,promise);try{return await promise}catch(e){cache.delete(path);throw e}}
 function get(row,keys){for(const k of keys){if(row&&row[k]!==undefined&&row[k]!=="")return row[k]}return null}
@@ -11,11 +11,11 @@ function label(id){return names.get(String(id))||"Player "+id}
 function n(v,d=1){if(v===null||v===undefined||v==="")return "—";const x=Number(v);return Number.isFinite(x)?x.toFixed(d):String(v)}
 function pct(v){if(v===null||v==="")return "—";let x=Number(v);return Number.isFinite(x)?(x<=1&&x>=0?100*x:x).toFixed(1)+"%":v}
 function status(t){$("status").textContent=t}
-function teamLabel(r){return val(r,"team")||"NBA"}
+function teamLabel(r){const id=String(val(r,"team")||"");const season=r?._season||$("season").value;return teamNames.get(season+"|"+id)||id||"NBA"}
 function rankRow(r){const t=String(teamLabel(r)).toUpperCase();return t==="TOT"||t==="TOTAL"||t==="2TM"||t==="3TM"||t==="4TM"?2:1}
-function seasonAggregate(rows){const byId=new Map();for(const r of rows){const id=val(r,"id");if(id===null)continue;const old=byId.get(String(id));if(!old||rankRow(r)>rankRow(old)||(!old&&r))byId.set(String(id),r)}return [...byId.values()]}
+function seasonAggregate(rows){const byId=new Map();for(const r of rows){if(r.season_type&&r.season_type!=="regular_season")continue;const id=val(r,"id");if(id===null)continue;const old=byId.get(String(id));if(!old||rankRow(r)>rankRow(old))byId.set(String(id),r)}return [...byId.values()]}
 function showDirectory(){const term=$("search").value.toLowerCase().trim();const rows=seasonAggregate(seasonRows).filter(r=>label(val(r,"id")).toLowerCase().includes(term)).sort((a,b)=>label(val(a,"id")).localeCompare(label(val(b,"id"))));$("count").textContent=rows.length+" players";$("players").replaceChildren();const frag=document.createDocumentFragment();for(const r of rows){const id=String(val(r,"id"));const b=document.createElement("button");b.className="player"+(id===selected?" active":"");b.innerHTML=`<span></span><small></small>`;b.querySelector("span").textContent=label(id);b.querySelector("small").textContent=teamLabel(r);b.onclick=()=>selectPlayer(id);frag.append(b)}$("players").append(frag)}
-async function setSeason(){const t=++token;selected=null;$("profile").innerHTML='<div class="empty">Choose a player to see their full NBA career.</div>';status("Loading "+$("season").value+"…");try{seasonRows=await load("data/"+$("season").value+"/player_season_stats_per_game.csv.gz");if(t!==token)return;showDirectory();status("Season loaded. Select a player.")}catch(e){status("Error: "+e.message)}}
+async function setSeason(){const t=++token;selected=null;$("profile").innerHTML='<div class="empty">Choose a player to see their full NBA career.</div>';status("Loading "+$("season").value+"…");try{const season=$("season").value;const [rows,teams]=await Promise.all([load("data/"+season+"/player_season_stats_per_game.csv.gz"),load("data/"+season+"/team_seasons.csv.gz")]);seasonRows=rows;for(const team of teams){const id=String(team.team_id||"");const abbr=team.nba_abbrev||team.team_abbreviation||team.abbreviation||team.name||team.team_name;if(id&&abbr)teamNames.set(season+"|"+id,abbr)}if(t!==token)return;showDirectory();status("Season loaded. Select a player.")}catch(e){status("Error: "+e.message)}}
 async function selectPlayer(id){selected=id;showDirectory();$("profile").innerHTML='<div class="empty">Loading career history…</div>';try{const results=await Promise.all(allSeasons.map(s=>load("data/"+s+"/player_season_stats_per_game.csv.gz").then(rows=>({s,rows:rows.filter(r=>String(val(r,"id"))===id)})).catch(()=>({s,rows:[]}))));if(selected!==id)return;const career=results.flatMap(({s,rows})=>seasonAggregate(rows).map(r=>({...r,_season:s})));const rapm=await Promise.all(allSeasons.map(s=>load("data/"+s+"/openrapm.csv.gz").then(rows=>({s,rows:rows.filter(r=>String(val(r,"id"))===id)})).catch(()=>({s,rows:[]}))));if(selected!==id)return;const impact=new Map(rapm.flatMap(({s,rows})=>rows.map(r=>[s,r])));renderProfile(id,career,impact);status(`Loaded ${career.length} career seasons for ${label(id)}`)}catch(e){status("Error: "+e.message);$("profile").textContent="Could not load player profile."}}
 function renderProfile(id,career,impact){const p=$("profile");p.replaceChildren();const meta=playerDetails.get(String(id))||{};
 const hero=document.createElement("div");hero.className="playerhero";
@@ -26,19 +26,20 @@ if(/^\\d{5,9}$/.test(nbaId)){photo.src="https://cdn.nba.com/headshots/nba/latest
 hero.append(photo,fallback);const heroText=document.createElement("div");heroText.className="hero-text";
 const h=document.createElement("h2");h.textContent=label(id);heroText.append(h);
 const bio=document.createElement("div");bio.className="bio-grid";
-const position=profileField(meta,["position","pos","player_position"]);
-const height=profileField(meta,["height","height_display","height_feet","height_ft"]);
-const weight=profileField(meta,["weight","weight_lbs","weight_pounds"]);
-const draftYear=profileField(meta,["draft_year","draftYear","year_drafted"]);
-const draftRound=profileField(meta,["draft_round","draftRound"]);
-const draftPick=profileField(meta,["draft_number","draft_pick","draft_overall","draft_pick_number","draftNumber"]);
+const bioSources=[...career].reverse();const bioValue=(keys)=>{for(const row of bioSources){const v=profileField(row,keys);if(v!==null)return v}return profileField(meta,keys)};
+const position=bioValue(["position","pos","player_position"]);
+const height=bioValue(["player_height","height","height_display","height_feet","height_ft"])||(()=>{const inches=Number(bioValue(["player_height_inches"]));return inches>0?Math.floor(inches/12)+"′"+inches%12+"″":null})();
+const rawWeight=bioValue(["player_weight","weight","weight_lbs","weight_pounds"]);const weight=rawWeight===null?null:String(rawWeight)+(/lbs|kg/i.test(String(rawWeight))?"":" lbs");
+const draftYear=bioValue(["draft_year","draftYear","year_drafted"]);
+const draftRound=bioValue(["draft_round","draftRound"]);
+const draftPick=bioValue(["draft_number","draft_pick","draft_overall","draft_pick_number","draftNumber"]);
 const seasonsPlayed=career.length;
 const currentSeason=career.some(r=>r._season==="2026-27");
 const activity=profileField(meta,["is_active","active","roster_status"]);
 let activityLabel="Not confirmed";
-if(currentSeason)activityLabel="Played in 2026–27";
+if(currentSeason)activityLabel="Played in 2026–27 (roster status unverified)";
 else if(activity!==null){const a=String(activity).toLowerCase();activityLabel=["true","1","active"].includes(a)?"Active (source)":["false","0","inactive","retired"].includes(a)?"Inactive (source)":"Not confirmed"}
-const draftLabel=draftYear?String(draftYear):"—";
+const draftLabel=draftYear&&String(draftYear)!=="0"?String(draftYear):"Undrafted / unknown";
 for(const [title,value] of [["Position",position],["Height",height],["Weight",weight],["NBA seasons in data",seasonsPlayed],["Status",activityLabel],["Draft year",draftLabel],["Draft round",draftRound],["Draft pick",draftPick]]){const item=document.createElement("div");item.className="bio-item";const a=document.createElement("span");a.textContent=title;const b=document.createElement("strong");b.textContent=value===null||value===undefined||value===""?"—":String(value);item.append(a,b);bio.append(item)}
 heroText.append(bio);hero.append(heroText);p.append(hero);const sub=document.createElement("div");sub.className="sub";sub.textContent=`NBA player ID: ${id} · ${career.length} seasons in database`;p.append(sub);const latest=career.at(-1)||{};const stats=document.createElement("div");stats.className="stats";for(const [k,l] of [["pts","PPG"],["reb","RPG"],["ast","APG"],["ts","TS%"],["pm","+/-"]]){const box=document.createElement("div");box.className="stat";const v=k==="ts"?pct(val(latest,k)):n(val(latest,k));box.innerHTML="<strong></strong><span></span>";box.querySelector("strong").textContent=v;box.querySelector("span").textContent=l+" · latest season";stats.append(box)}p.append(stats);
 const tabs=document.createElement("div");tabs.className="tabs";for(const [id,title] of [["traditional","Traditional"],["shooting","Shooting"],["advanced","Advanced / Impact"],["all","All available fields"]]){const b=document.createElement("button");b.textContent=title;b.className=id===activeTab?"active":"";b.onclick=()=>{activeTab=id;renderProfile(selected,career,impact)};tabs.append(b)}p.append(tabs);
