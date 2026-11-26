@@ -21,11 +21,21 @@ function renderProfile(id,career,impact){const p=$("profile");p.replaceChildren(
 const hero=document.createElement("div");hero.className="playerhero";
 const photo=document.createElement("img");photo.className="headshot";photo.alt=label(id)+" headshot";photo.loading="lazy";photo.referrerPolicy="no-referrer";
 const fallback=document.createElement("div");fallback.className="photo-fallback";fallback.textContent=label(id).split(" ").map(x=>x[0]).slice(0,2).join("");fallback.hidden=true;
-const nbaId=String(profileField(meta,["nba_id","nba_player_id","person_id","player_id"])||id);
-if(/^[0-9]{5,9}$/.test(nbaId)){
-  photo.src="https://cdn.nba.com/headshots/nba/latest/1040x760/"+encodeURIComponent(nbaId)+".png";
-  photo.onerror=()=>{photo.hidden=true;fallback.hidden=false};
-}else{photo.hidden=true;fallback.hidden=false}
+// The selected profile ID is the NBA person ID; do not substitute a team or season ID.
+const nbaId=String(id).trim();
+const urls=/^[0-9]{5,9}$/.test(nbaId)?[
+  "https://cdn.nba.com/headshots/nba/latest/1040x760/"+nbaId+".png",
+  "https://cdn.nba.com/headshots/nba/latest/260x190/"+nbaId+".png",
+  "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/"+nbaId+".png"
+]:[];
+let photoAttempt=0;
+photo.onerror=()=>{
+  photoAttempt++;
+  if(photoAttempt<urls.length){photo.src=urls[photoAttempt];return}
+  console.warn("No NBA headshot loaded for",nbaId,"Tried:",urls);
+  photo.hidden=true;fallback.hidden=false;
+};
+if(urls.length){photo.src=urls[0]}else{photo.hidden=true;fallback.hidden=false}
 hero.append(photo,fallback);const heroText=document.createElement("div");heroText.className="hero-text";
 const h=document.createElement("h2");h.textContent=label(id);heroText.append(h);
 const bio=document.createElement("div");bio.className="bio-grid";
