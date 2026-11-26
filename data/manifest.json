@@ -1,0 +1,233 @@
+{
+  "source": "https://basketball-data.billmill.org/nba/nba.duckdb",
+  "seasons": {
+    "2003-04": {
+      "player_season_stats": 631,
+      "player_season_stats_per_game": 631,
+      "player_game_logs": 25941,
+      "team_game_logs": 2574,
+      "team_seasons": 31,
+      "player_seasons": 484,
+      "openrapm": 415
+    },
+    "2004-05": {
+      "player_season_stats": 652,
+      "player_season_stats_per_game": 652,
+      "player_game_logs": 27780,
+      "team_game_logs": 2726,
+      "team_seasons": 32,
+      "player_seasons": 513,
+      "openrapm": 445
+    },
+    "2005-06": {
+      "player_season_stats": 653,
+      "player_season_stats_per_game": 653,
+      "player_game_logs": 28912,
+      "team_game_logs": 2816,
+      "team_seasons": 32,
+      "player_seasons": 540,
+      "openrapm": 440
+    },
+    "2006-07": {
+      "player_season_stats": 649,
+      "player_season_stats_per_game": 649,
+      "player_game_logs": 29106,
+      "team_game_logs": 2816,
+      "team_seasons": 32,
+      "player_seasons": 528,
+      "openrapm": 444
+    },
+    "2007-08": {
+      "player_season_stats": 653,
+      "player_season_stats_per_game": 653,
+      "player_game_logs": 29309,
+      "team_game_logs": 2848,
+      "team_seasons": 41,
+      "player_seasons": 638,
+      "openrapm": 438
+    },
+    "2008-09": {
+      "player_season_stats": 644,
+      "player_season_stats_per_game": 644,
+      "player_game_logs": 29167,
+      "team_game_logs": 2862,
+      "team_seasons": 35,
+      "player_seasons": 563,
+      "openrapm": 427
+    },
+    "2009-10": {
+      "player_season_stats": 641,
+      "player_season_stats_per_game": 641,
+      "player_game_logs": 29388,
+      "team_game_logs": 2864,
+      "team_seasons": 36,
+      "player_seasons": 570,
+      "openrapm": 433
+    },
+    "2010-11": {
+      "player_season_stats": 646,
+      "player_season_stats_per_game": 646,
+      "player_game_logs": 29641,
+      "team_game_logs": 2862,
+      "team_seasons": 37,
+      "player_seasons": 575,
+      "openrapm": 435
+    },
+    "2011-12": {
+      "player_season_stats": 682,
+      "player_season_stats_per_game": 682,
+      "player_game_logs": 23279,
+      "team_game_logs": 2210,
+      "team_seasons": 32,
+      "player_seasons": 528,
+      "openrapm": 466
+    },
+    "2012-13": {
+      "player_season_stats": 678,
+      "player_season_stats_per_game": 678,
+      "player_game_logs": 30472,
+      "team_game_logs": 2862,
+      "team_seasons": 39,
+      "player_seasons": 641,
+      "openrapm": 453
+    },
+    "2013-14": {
+      "player_season_stats": 686,
+      "player_season_stats_per_game": 686,
+      "player_game_logs": 30420,
+      "team_game_logs": 2870,
+      "team_seasons": 36,
+      "player_seasons": 607,
+      "openrapm": 460
+    },
+    "2014-15": {
+      "player_season_stats": 700,
+      "player_season_stats_per_game": 700,
+      "player_game_logs": 30617,
+      "team_game_logs": 2860,
+      "team_seasons": 37,
+      "player_seasons": 623,
+      "openrapm": 474
+    },
+    "2015-16": {
+      "player_season_stats": 691,
+      "player_season_stats_per_game": 691,
+      "player_game_logs": 30833,
+      "team_game_logs": 2852,
+      "team_seasons": 38,
+      "player_seasons": 656,
+      "openrapm": 460
+    },
+    "2016-17": {
+      "player_season_stats": 701,
+      "player_season_stats_per_game": 701,
+      "player_game_logs": 30595,
+      "team_game_logs": 2824,
+      "team_seasons": 37,
+      "player_seasons": 632,
+      "openrapm": 468
+    },
+    "2017-18": {
+      "player_season_stats": 750,
+      "player_season_stats_per_game": 750,
+      "player_game_logs": 29998,
+      "team_game_logs": 2782,
+      "team_seasons": 38,
+      "player_seasons": 687,
+      "openrapm": 502
+    },
+    "2018-19": {
+      "player_season_stats": 742,
+      "player_season_stats_per_game": 742,
+      "player_game_logs": 30082,
+      "team_game_logs": 2784,
+      "team_seasons": 42,
+      "player_seasons": 739,
+      "openrapm": 497,
+      "player_box": 27859
+    },
+    "2019-20": {
+      "player_season_stats": 746,
+      "player_season_stats_per_game": 746,
+      "player_game_logs": 27160,
+      "team_game_logs": 2512,
+      "team_seasons": 40,
+      "player_seasons": 721,
+      "openrapm": 504,
+      "player_box": 24101
+    },
+    "2020-21": {
+      "player_season_stats": 779,
+      "player_season_stats_per_game": 779,
+      "player_game_logs": 26413,
+      "team_game_logs": 2442,
+      "team_seasons": 32,
+      "player_seasons": 590,
+      "openrapm": 523,
+      "player_box": 25053
+    },
+    "2021-22": {
+      "player_season_stats": 822,
+      "player_season_stats_per_game": 822,
+      "player_game_logs": 29878,
+      "team_game_logs": 2780,
+      "team_seasons": 32,
+      "player_seasons": 651,
+      "openrapm": 546,
+      "player_box": 28046
+    },
+    "2022-23": {
+      "player_season_stats": 756,
+      "player_season_stats_per_game": 756,
+      "player_game_logs": 29738,
+      "team_game_logs": 2782,
+      "team_seasons": 34,
+      "player_seasons": 661,
+      "openrapm": 517,
+      "player_box": 27737
+    },
+    "2023-24": {
+      "player_season_stats": 786,
+      "player_season_stats_per_game": 786,
+      "player_game_logs": 30334,
+      "team_game_logs": 2786,
+      "team_seasons": 37,
+      "player_seasons": 699,
+      "openrapm": 539,
+      "player_box": 28220
+    },
+    "2024-25": {
+      "player_season_stats": 788,
+      "player_season_stats_per_game": 788,
+      "player_game_logs": 30409,
+      "team_game_logs": 2794,
+      "team_seasons": 36,
+      "player_seasons": 665,
+      "openrapm": 542,
+      "player_box": 28261
+    },
+    "2025-26": {
+      "player_season_stats": 812,
+      "player_season_stats_per_game": 812,
+      "player_game_logs": 30800,
+      "team_game_logs": 2794,
+      "team_seasons": 37,
+      "player_seasons": 687,
+      "openrapm": 556,
+      "epm": 812,
+      "player_box": 28670
+    },
+    "2026-27": {
+      "player_season_stats": 482,
+      "player_season_stats_per_game": 482,
+      "player_game_logs": 8023,
+      "team_game_logs": 674,
+      "team_seasons": 31,
+      "player_seasons": 640,
+      "openrapm": 421,
+      "epm": 481,
+      "player_box": 6014
+    }
+  },
+  "player_identity": "NBA player_id"
+}
