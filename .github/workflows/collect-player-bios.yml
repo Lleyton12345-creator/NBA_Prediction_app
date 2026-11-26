@@ -6,7 +6,7 @@ permissions:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,9 +14,9 @@ jobs:
           python-version: '3.11'
       - run: pip install pandas
       - run: python collect_player_bios.py
-      - name: Save verified player bios and coverage report
+      - name: Save player bios and coverage report
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/player_bios.json data/bio_coverage_report.json
-          git diff --cached --quiet || (git commit -m "Import NBA player bios and coverage report" && git push)
+          git diff --cached --quiet || (git commit -m "Extract available NBA biographies from imported records" && git push)
