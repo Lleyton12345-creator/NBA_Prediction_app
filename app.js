@@ -22,7 +22,10 @@ const hero=document.createElement("div");hero.className="playerhero";
 const photo=document.createElement("img");photo.className="headshot";photo.alt=label(id)+" headshot";photo.loading="lazy";photo.referrerPolicy="no-referrer";
 const fallback=document.createElement("div");fallback.className="photo-fallback";fallback.textContent=label(id).split(" ").map(x=>x[0]).slice(0,2).join("");fallback.hidden=true;
 const nbaId=String(profileField(meta,["nba_id","nba_player_id","person_id","player_id"])||id);
-if(/^\\d{5,9}$/.test(nbaId)){photo.src="https://cdn.nba.com/headshots/nba/latest/1040x760/"+encodeURIComponent(nbaId)+".png";photo.onerror=()=>{photo.hidden=true;fallback.hidden=false}}else{photo.hidden=true;fallback.hidden=false}
+if(/^[0-9]{5,9}$/.test(nbaId)){
+  photo.src="https://cdn.nba.com/headshots/nba/latest/1040x760/"+encodeURIComponent(nbaId)+".png";
+  photo.onerror=()=>{photo.hidden=true;fallback.hidden=false};
+}else{photo.hidden=true;fallback.hidden=false}
 hero.append(photo,fallback);const heroText=document.createElement("div");heroText.className="hero-text";
 const h=document.createElement("h2");h.textContent=label(id);heroText.append(h);
 const bio=document.createElement("div");bio.className="bio-grid";
