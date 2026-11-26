@@ -22,7 +22,13 @@ const hero=document.createElement("div");hero.className="playerhero";
 const photo=document.createElement("img");photo.className="headshot";photo.alt=label(id)+" headshot";photo.loading="lazy";photo.referrerPolicy="no-referrer";
 const fallback=document.createElement("div");fallback.className="photo-fallback";fallback.textContent=label(id).split(" ").map(x=>x[0]).slice(0,2).join("");fallback.hidden=true;
 // The selected profile ID is the NBA person ID; do not substitute a team or season ID.
-const nbaId=String(id).trim();
+const candidateIds=[
+  profileField(meta,["nba_id","nba_player_id","person_id"]),
+  ...career.map(row=>profileField(row,["nba_id","nba_player_id","person_id"])),
+  id
+].filter(x=>x!==null&&x!==undefined).map(x=>String(x).trim());
+const nbaId=candidateIds.find(x=>/^[0-9]{5,9}$/.test(x))||"";
+console.info("NBA headshot lookup",label(id),{selectedId:id,nbaId});
 const urls=/^[0-9]{5,9}$/.test(nbaId)?[
   "https://cdn.nba.com/headshots/nba/latest/1040x760/"+nbaId+".png",
   "https://cdn.nba.com/headshots/nba/latest/260x190/"+nbaId+".png",
